@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniPay - OTP Verification</title>
+
+<!-- Google Fonts & Font Awesome -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        background: #f5f6fa;
+        overflow-x: hidden;
+    }
+
+    /* --- Top Bar --- */
+    .topbar {
+        width: 100%;
+        padding: 15px 25px;
+        background: linear-gradient(135deg,#4322ff,#944bff);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+    }
+    .back-btn { font-size: 22px; cursor: pointer; color: white; text-decoration: none; transition: 0.3s; }
+    .back-btn:hover { transform: translateX(-5px); }
+    .title { font-size: 20px; font-weight: 600; letter-spacing: 1px; }
+    .spacer { width: 24px; }
+
+    /* --- Main Content --- */
+    .main-content {
+        padding-top: 100px;
+        padding-bottom: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        box-sizing: border-box;
+    }
+
+    .otp-container {
+        background: white;
+        width: 90%;
+        max-width: 400px;
+        padding: 40px 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        text-align: center;
+        animation: fadeInUp 0.5s ease;
+    }
+
+    .otp-icon {
+        width: 80px;
+        height: 80px;
+        background: #f0eeff;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 35px;
+        color: #4322ff;
+        margin-bottom: 20px;
+    }
+
+    h2 { margin: 0; color: #333; font-size: 22px; font-weight: 700; }
+    p { color: #777; font-size: 14px; margin: 10px 0 30px 0; }
+
+    /* OTP Input */
+    .otp-input {
+        width: 100%;
+        padding: 15px;
+        font-size: 24px;
+        letter-spacing: 10px;
+        text-align: center;
+        border: 2px solid #eee;
+        border-radius: 12px;
+        outline: none;
+        transition: 0.3s;
+        box-sizing: border-box;
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: #333;
+    }
+    .otp-input:focus {
+        border-color: #4322ff;
+        background: #fafaff;
+    }
+
+    /* Timer & Resend */
+    .timer-box {
+        margin: 20px 0;
+        font-size: 14px;
+        color: #555;
+    }
+    .timer-count { color: #ff4757; font-weight: 600; }
+    .resend-link {
+        color: #999;
+        text-decoration: none;
+        font-weight: 500;
+        pointer-events: none;
+        transition: 0.3s;
+    }
+    .resend-link.active {
+        color: #4322ff;
+        cursor: pointer;
+        pointer-events: all;
+    }
+
+    /* Verify Button */
+    .verify-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg,#4322ff,#944bff);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 5px 15px rgba(67, 34, 255, 0.25);
+    }
+    .verify-btn:hover { transform: translateY(-2px); }
+    .verify-btn:active { transform: scale(0.98); }
+    .verify-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Popups */
+    .popup-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 200;
+        visibility: hidden; opacity: 0;
+        transition: 0.3s;
+    }
+    .popup-content {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        width: 80%;
+        max-width: 300px;
+        transform: scale(0.8);
+        transition: 0.3s;
+    }
+    .popup-overlay.active { visibility: visible; opacity: 1; }
+    .popup-overlay.active .popup-content { transform: scale(1); }
+    
+    .status-icon { font-size: 50px; margin-bottom: 15px; }
+    .success { color: #27ae60; }
+    .error { color: #e74c3c; }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+    <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="title">Verification</div>
+    <div class="spacer"></div>
+</div>
+
+<div class="main-content">
+    <div class="otp-container">
+        <div class="otp-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+        <h2>OTP Verification</h2>
+        <p>We sent a 6-digit code to your mobile number.</p>
+
+        <input type="tel" id="otpCode" class="otp-input" placeholder="••••••" maxlength="6">
+        
+        <div class="timer-box">
+            Resend code in <span id="timer" class="timer-count">60</span>s
+        </div>
+
+        <a id="resendBtn" class="resend-link" onclick="resendOTP()">Resend Code</a>
+        
+        <div style="margin-top: 25px;">
+            <button id="verifyBtn" class="verify-btn" onclick="verifyOTP()">Verify Code</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Popup -->
+<div id="successPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="status-icon success"><i class="fa-solid fa-circle-check"></i></div>
+        <h3>Success!</h3>
+        <p style="color:#666; font-size:14px;">Verification Complete.</p>
+        <button class="verify-btn" onclick="window.location.href='dashboard.html'">Go to Dashboard</button>
+    </div>
+</div>
+
+<!-- Error Popup -->
+<div id="errorPopup" class="popup-overlay">
+    <div class="popup-content">
+        <div class="status-icon error"><i class="fa-solid fa-circle-xmark"></i></div>
+        <h3>Failed!</h3>
+        <p style="color:#666; font-size:14px;" id="errorMsg">Invalid OTP Code.</p>
+        <button class="verify-btn" onclick="closeError()">Try Again</button>
+    </div>
+</div>
+
+<script>
+    // --- Logic for Timer & Interaction ---
+    let timeLeft = 60;
+    let timerId = setInterval(countdown, 1000);
+    const timerEl = document.getElementById("timer");
+    const resendBtn = document.getElementById("resendBtn");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const otpInput = document.getElementById("otpCode");
+
+    function countdown() {
+        if (timeLeft == 0) {
+            clearTimeout(timerId);
+            timerEl.parentElement.style.display = "none"; // Hide timer text
+            resendBtn.classList.add("active"); // Enable resend link
+        } else {
+            timeLeft--;
+            timerEl.innerHTML = timeLeft;
+        }
+    }
+
+    function resendOTP() {
+        if(timeLeft > 0) return;
+        
+        // Reset Timer
+        timeLeft = 60;
+        timerEl.parentElement.style.display = "block";
+        resendBtn.classList.remove("active");
+        timerId = setInterval(countdown, 1000);
+        
+        alert("New OTP sent! (Simulated)");
+    }
+
+    // --- Verification Simulation ---
+    function verifyOTP() {
+        const code = otpInput.value;
+
+        // Visual Loading State
+        verifyBtn.innerText = "Verifying...";
+        verifyBtn.disabled = true;
+
+        setTimeout(() => {
+            // Restore Button
+            verifyBtn.innerText = "Verify Code";
+            verifyBtn.disabled = false;
+
+            // Simple Logic: 
+            // If code is empty or less than 6 digits -> Error
+            // If code is valid (any 6 digit) -> Success
+            
+            if (code.length < 6) {
+                showError("Please enter a valid 6-digit code.");
+            } else {
+                showSuccess();
+            }
+        }, 1500); // 1.5 second delay to simulate server request
+    }
+
+    function showSuccess() {
+        document.getElementById("successPopup").classList.add("active");
+    }
+
+    function showError(msg) {
+        document.getElementById("errorMsg").innerText = msg;
+        document.getElementById("errorPopup").classList.add("active");
+    }
+
+    function closeError() {
+        document.getElementById("errorPopup").classList.remove("active");
+        otpInput.value = "";
+        otpInput.focus();
+    }
+
+    // Auto-focus on load
+    window.onload = () => {
+        otpInput.focus();
+    }
+</script>
+
+</body>
+</html>

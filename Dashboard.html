@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniPay Dashboard</title>
+
+<!-- Google Fonts & Font Awesome -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+    body { margin: 0; font-family: 'Poppins', sans-serif; background: #f5f6fa; overflow-x: hidden; }
+
+    /* Top Bar */
+    .topbar { width: 100%; padding: 15px 25px; background: linear-gradient(135deg,#4322ff,#944bff); color: white; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.2); box-sizing: border-box; }
+    .menu-btn, .profile-icon { font-size: 26px; cursor: pointer; transition: 0.3s; }
+    .menu-btn:hover, .profile-icon:hover { transform: scale(1.1); }
+    .title { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+
+    /* Sidebar */
+    .sidebar { position: fixed; top: 70px; left: -250px; width: 250px; height: 100%; background: #3721cc; color: white; padding: 25px; transition: 0.4s; z-index: 99; box-shadow: 2px 0 12px rgba(0,0,0,0.2); box-sizing: border-box; }
+    .sidebar.active { left: 0; }
+    .sidebar a { display: flex; align-items: center; gap: 12px; color: white; text-decoration: none; margin: 18px 0; font-size: 18px; padding: 10px; border-radius: 8px; transition: 0.3s; cursor: pointer; }
+    .sidebar a:hover { background: rgba(255,255,255,0.15); }
+
+    /* Profile Popup */
+    .profile-popup { position: fixed; right: -200px; top: 70px; width: 160px; background: white; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.25); transition: 0.4s; text-align: center; z-index: 100; visibility: hidden; opacity: 0; }
+    .profile-popup.active { right: 20px; visibility: visible; opacity: 1; }
+    .profile-popup div { padding: 14px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.3s; color: #333; }
+    .profile-popup div:hover { background: #f5f5f5; }
+
+    /* Main Content */
+    .main-content { padding-top: 90px; padding-bottom: 50px; }
+
+    /* Balance */
+    .balance-box { margin: 0 25px 25px 25px; background: white; padding: 20px 25px; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
+    .balance-title { font-size: 16px; color: #777; margin-bottom: 5px; }
+    .usd { font-size: 36px; font-weight: 700; color: #4322ff; }
+    .bdt { font-size: 18px; margin-top: 5px; color: #944bff; font-weight: 600; }
+
+    /* --- FIXED CARD FLIP & LAYOUT --- */
+    .card-container {
+        perspective: 1000px;
+        margin: 0 25px;
+        height: 220px; 
+        position: relative;
+    }
+
+    .card-box {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s;
+        border-radius: 20px;
+        box-shadow: 0 6px 25px rgba(67, 34, 255, 0.3);
+    }
+
+    .card-front, .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 20px;
+        padding: 25px 30px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        top: 0; left: 0;
+    }
+
+    .card-front { background: linear-gradient(135deg,#4322ff,#944bff); z-index: 2; }
+    .card-back { background: linear-gradient(135deg,#2c3e50,#4ca1af); transform: rotateY(180deg); z-index: 1; }
+    
+    .card-box.flipped { transform: rotateY(180deg); }
+
+    .card-number { font-size: 24px; letter-spacing: 3px; margin-bottom: 20px; font-weight: 600; font-family: 'Courier New', monospace; color: white; }
+    .card-info { display: flex; justify-content: space-between; font-size: 16px; color: white; }
+
+    /* Frozen Style */
+    .card-box.frozen .card-front, .card-box.frozen .card-back { background: linear-gradient(135deg,#7f8c8d,#95a5a6); }
+    .card-box.frozen::after {
+        content: "FROZEN"; position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%) rotate(-15deg) translateZ(10px);
+        font-size: 40px; font-weight: 900; opacity: 0.5;
+        border: 4px solid rgba(255,255,255,0.5); padding: 5px 15px;
+        border-radius: 8px; color: white; pointer-events: none;
+    }
+
+    /* Buttons */
+    .buttons { display: flex; justify-content: space-between; margin: 20px 25px; gap: 10px; }
+    .buttons button {
+        flex: 1; padding: 12px 0; border: none; border-radius: 12px;
+        font-weight: 600; background: #4322ff; color: white; cursor: pointer;
+        transition: 0.3s; box-shadow: 0 4px 10px rgba(67, 34, 255, 0.2);
+    }
+    .buttons button:active { transform: scale(0.98); }
+    .buttons .btn-freeze { background: #ff4757; }
+
+    /* Transactions */
+    .trans-title { margin: 25px 25px 10px 25px; font-size: 20px; font-weight: 600; color: #333; }
+    .trans-box { margin: 0 25px; background: white; padding: 0 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .transaction { padding: 15px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+    .transaction:last-child { border-bottom: none; }
+    .t-type { font-weight: 500; color: #333; }
+    .t-date { font-size: 12px; color: #999; display: block; margin-top: 3px; }
+    .t-amount { font-weight: 600; color: #4322ff; }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+    <div class="menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></div>
+    <div class="title">UniPay</div>
+    <div class="profile-icon" onclick="toggleProfile()"><i class="fa-solid fa-user-circle"></i></div>
+</div>
+
+<!-- Sidebar with updated links -->
+<div id="sidebar" class="sidebar">
+
+    <a href="Withdraw.html"><i class="fa-solid fa-arrow-up"></i> Withdraw</a>
+    <a href="Verification.html"><i class="fa-solid fa-id-card"></i> Verification</a>
+    <a href="OTP.html"><i class="fa-solid fa-key"></i> OTP</a>
+</div>
+
+<!-- Profile Popup with updated actions -->
+<div id="profilePopup" class="profile-popup">
+    <div onclick="goProfile()"><i class="fa-solid fa-user"></i> Profile</div>
+    <div onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+</div>
+
+<div class="main-content">
+    <div class="balance-box">
+        <div class="balance-title">Total Balance</div>
+        <div id="usdBalance" class="usd">$0.00</div>
+        <div id="bdtBalance" class="bdt">0 BDT</div>
+    </div>
+
+    <!-- Card -->
+    <div class="card-container">
+        <div id="cardBox" class="card-box">
+            <div class="card-front">
+                <div class="card-number" id="cardNumber">•••• •••• •••• ••••</div>
+                <div class="card-info">
+                    <span>EXP: <span id="expiry">--/--</span></span> 
+                    <span>CVV: <span id="cvv">***</span></span>
+                </div>
+            </div>
+            <div class="card-back">
+                <div class="card-number" id="cardNumberBack">0000 0000 0000 0000</div>
+                <div class="card-info">
+                    <span>EXP: <span id="expiryBack">00/00</span></span> 
+                    <span>CVV: <span id="cvvBack">000</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buttons with IDs -->
+    <div class="buttons">
+        <button id="btnNew">New Card</button>
+        <button id="btnReveal">Reveal</button>
+        <button id="btnFreeze" class="btn-freeze">Freeze</button>
+    </div>
+
+    <div class="trans-title">Recent Transactions</div>
+    <div class="trans-box" id="historyBox">
+        <div style="padding:20px; text-align:center; color:#999;">Loading Data...</div>
+    </div>
+</div>
+
+<!-- Firebase Logic -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD2jgca0-hYv-Kzm0EKo9AaMwU3BCZcjdc",
+        authDomain: "unipay-b0d26.firebaseapp.com",
+        databaseURL: "https://unipay-b0d26-default-rtdb.firebaseio.com",
+        projectId: "unipay-b0d26",
+        storageBucket: "unipay-b0d26.firebasestorage.app",
+        messagingSenderId: "289798099942",
+        appId: "1:289798099942:web:50f3a077e12cb458b87c27",
+        measurementId: "G-E3C7R73ZET"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentUser;
+    let cardData = null;
+    let isRevealed = false;
+
+    // Auto Login
+    signInAnonymously(auth).catch((error) => {
+        alert("Login Failed: " + error.message);
+    });
+
+    onAuthStateChanged(auth, user => {
+        if(user){
+            currentUser = user;
+            loadDashboard();
+        }
+    });
+
+    function loadDashboard(){
+        const userRef = ref(db, "users/" + currentUser.uid);
+        onValue(userRef, snapshot => {
+            const data = snapshot.val();
+            
+            if(!data){
+                generateCard(); 
+                return;
+            }
+
+            const usd = data.balanceUSD || 0;
+            document.getElementById("usdBalance").innerText = "$" + usd.toLocaleString('en-US', {minimumFractionDigits:2});
+            document.getElementById("bdtBalance").innerText = Math.floor(usd*125).toLocaleString() + " BDT";
+
+            if(data.card) {
+                cardData = data.card;
+                if(cardData.frozen) isRevealed = false;
+                renderCard();
+            } else {
+                generateCard();
+            }
+
+            loadTransactions(data.transactions);
+        });
+    }
+
+    function generateCard(){
+        if(!currentUser) return;
+        const number = "5500 " + Math.floor(Math.random()*8999+1000) + " " + Math.floor(Math.random()*8999+1000) + " " + Math.floor(Math.random()*8999+1000);
+        const exp = (Math.floor(Math.random()*12)+1).toString().padStart(2,"0") + "/" + (Math.floor(Math.random()*5)+25);
+        const cvv = Math.floor(Math.random()*899+100).toString();
+        
+        const newCard = {number, exp, cvv, frozen: false};
+        
+        set(ref(db, "users/" + currentUser.uid + "/card"), newCard)
+           .then(() => { isRevealed = false; renderCard(); });
+    }
+
+    function renderCard(){
+        if(!cardData) return;
+        const cardBox = document.getElementById("cardBox");
+        const freezeBtn = document.getElementById("btnFreeze");
+        const revealBtn = document.getElementById("btnReveal");
+
+        if(cardData.frozen){
+            cardBox.classList.add("frozen");
+            freezeBtn.innerText = "Unfreeze";
+            revealBtn.innerText = "Locked";
+        } else {
+            cardBox.classList.remove("frozen");
+            freezeBtn.innerText = "Freeze";
+            revealBtn.innerText = isRevealed ? "Hide" : "Reveal";
+        }
+
+        document.getElementById("cardNumber").innerText = "•••• •••• •••• " + cardData.number.slice(-4);
+        document.getElementById("expiry").innerText = "**/**";
+        document.getElementById("cvv").innerText = "***";
+        document.getElementById("cardNumberBack").innerText = cardData.number;
+        document.getElementById("expiryBack").innerText = cardData.exp;
+        document.getElementById("cvvBack").innerText = cardData.cvv;
+
+        if(isRevealed && !cardData.frozen) cardBox.classList.add("flipped");
+        else cardBox.classList.remove("flipped");
+    }
+
+    function loadTransactions(list){
+        const box = document.getElementById("historyBox");
+        box.innerHTML = "";
+        if(!list){ 
+            box.innerHTML = "<div style='padding:20px;text-align:center;color:#aaa;'>No recent transactions</div>"; 
+            return; 
+        }
+        Object.values(list).reverse().forEach(t => {
+            const isDeposit = t.type === 'deposit';
+            const color = isDeposit ? '#4322ff' : '#ff4757';
+            const sign = isDeposit ? '+' : '-';
+            box.innerHTML += `
+                <div class="transaction">
+                    <div><div class="t-type">${t.type.toUpperCase()}</div><span class="t-date">Today</span></div>
+                    <div class="t-amount" style="color:${color}">${sign}$${t.amount}</div>
+                </div>`;
+        });
+    }
+
+    // Attach Event Listeners
+    document.getElementById("btnNew").addEventListener("click", () => {
+        if(confirm("Generate new card?")) generateCard();
+    });
+
+    document.getElementById("btnReveal").addEventListener("click", () => {
+        if(cardData && cardData.frozen) return alert("Card is frozen!");
+        isRevealed = !isRevealed;
+        renderCard();
+    });
+
+    document.getElementById("btnFreeze").addEventListener("click", () => {
+        if(cardData){
+            update(ref(db, "users/" + currentUser.uid + "/card"), { frozen: !cardData.frozen });
+        }
+    });
+
+    // Make functions globally available for HTML onclicks
+    window.logout = function() {
+        signOut(auth).then(() => {
+            window.location.href = "index.html";
+        }).catch((error) => {
+            // Force redirect even if error
+            window.location.href = "index.html";
+        });
+    }
+
+    window.goProfile = function() {
+        window.location.href = "Profile.html";
+    }
+
+</script>
+
+<script>
+    function toggleMenu(){
+        document.getElementById("sidebar").classList.toggle("active");
+        document.getElementById("profilePopup").classList.remove("active");
+    }
+    function toggleProfile(){
+        document.getElementById("profilePopup").classList.toggle("active");
+        document.getElementById("sidebar").classList.remove("active");
+    }
+    document.addEventListener('click', (e) => {
+        if(!e.target.closest('.sidebar') && !e.target.closest('.menu-btn')) 
+            document.getElementById("sidebar").classList.remove("active");
+        if(!e.target.closest('.profile-popup') && !e.target.closest('.profile-icon')) 
+            document.getElementById("profilePopup").classList.remove("active");
+    });
+</script>
+
+</body>
+</html>

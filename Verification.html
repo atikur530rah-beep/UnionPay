@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniPay - Identity Verification</title>
+
+<!-- Google Fonts & Font Awesome -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        background: #f5f6fa;
+        overflow-x: hidden;
+    }
+
+    /* --- Top Bar --- */
+    .topbar {
+        width: 100%;
+        padding: 15px 25px;
+        background: linear-gradient(135deg,#4322ff,#944bff);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+    }
+    .back-btn { font-size: 22px; cursor: pointer; color: white; text-decoration: none; transition: 0.3s; }
+    .back-btn:hover { transform: translateX(-5px); }
+    .title { font-size: 20px; font-weight: 600; letter-spacing: 1px; }
+    .spacer { width: 24px; }
+
+    /* --- Main Content --- */
+    .main-content {
+        padding-top: 80px;
+        padding-bottom: 50px;
+        max-width: 600px;
+        margin: 0 auto;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    /* Status Card */
+    .status-card {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+    .status-text h4 { margin: 0; color: #333; font-size: 16px; }
+    .status-text p { margin: 5px 0 0; color: #777; font-size: 13px; }
+    
+    .badge {
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+    .badge.unverified { background: #ff4757; }
+    .badge.pending { background: #f1c40f; color: #333; }
+    .badge.verified { background: #27ae60; }
+
+    /* Verification Form */
+    .verification-form {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        animation: fadeInUp 0.5s ease;
+    }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 14px; color: #555; margin-bottom: 8px; font-weight: 500; }
+    
+    .form-select, .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #eee;
+        border-radius: 10px;
+        font-size: 15px;
+        outline: none;
+        background: #fafafa;
+        box-sizing: border-box;
+    }
+    .form-select:focus, .form-input:focus { border-color: #4322ff; background: white; }
+
+    /* File Upload Area */
+    .upload-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 10px;
+    }
+    
+    .upload-box {
+        border: 2px dashed #ccc;
+        border-radius: 12px;
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: 0.3s;
+        background: #fafafa;
+        position: relative;
+        overflow: hidden;
+    }
+    .upload-box:hover { border-color: #4322ff; background: #f0eeff; }
+    
+    .upload-box i { font-size: 24px; color: #999; margin-bottom: 5px; }
+    .upload-box span { font-size: 12px; color: #666; }
+    
+    .preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        top: 0; left: 0;
+        display: none;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg,#4322ff,#944bff);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 10px;
+    }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(67, 34, 255, 0.3); }
+    .submit-btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    /* Info Message (After submission) */
+    .info-box {
+        text-align: center;
+        padding: 40px 20px;
+        display: none;
+    }
+    .info-box i { font-size: 50px; color: #f1c40f; margin-bottom: 20px; }
+    .info-box h3 { margin: 0; color: #333; }
+    .info-box p { color: #666; font-size: 14px; margin-top: 10px; line-height: 1.6; }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+    <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="title">Verification</div>
+    <div class="spacer"></div>
+</div>
+
+<div class="main-content">
+    
+    <!-- Status Banner -->
+    <div class="status-card">
+        <div class="status-text">
+            <h4>Current Status</h4>
+            <p id="statusDesc">Please submit documents.</p>
+        </div>
+        <div id="statusBadge" class="badge unverified">Unverified</div>
+    </div>
+
+    <!-- Info Box (Shown when Pending or Verified) -->
+    <div id="infoBox" class="info-box">
+        <i class="fa-solid fa-hourglass-half"></i>
+        <h3>Verification Pending</h3>
+        <p>Your documents have been submitted securely. Our team is reviewing your details. This process usually takes 24-48 hours.</p>
+        <button class="submit-btn" style="margin-top:20px; width:auto; padding: 10px 30px;" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+    </div>
+
+    <!-- Verification Form -->
+    <div id="verificationForm" class="verification-form">
+        <div class="form-group">
+            <label>Document Type</label>
+            <select id="docType" class="form-select">
+                <option value="nid">National ID Card</option>
+                <option value="passport">Passport</option>
+                <option value="driving">Driving License</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Document Number</label>
+            <input type="text" id="docNumber" class="form-input" placeholder="e.g. 1234567890">
+        </div>
+
+        <div class="form-group">
+            <label>Upload Photos</label>
+            <div class="upload-container">
+                <!-- Front Side -->
+                <div class="upload-box" onclick="document.getElementById('frontFile').click()">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span>Front Side</span>
+                    <img id="previewFront" class="preview-img">
+                    <input type="file" id="frontFile" hidden accept="image/*" onchange="previewImage(this, 'previewFront')">
+                </div>
+                
+                <!-- Back Side -->
+                <div class="upload-box" onclick="document.getElementById('backFile').click()">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                    <span>Back Side</span>
+                    <img id="previewBack" class="preview-img">
+                    <input type="file" id="backFile" hidden accept="image/*" onchange="previewImage(this, 'previewBack')">
+                </div>
+            </div>
+        </div>
+
+        <button id="submitBtn" class="submit-btn" onclick="submitVerification()">Submit Documents</button>
+    </div>
+
+</div>
+
+<!-- Firebase Logic -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD2jgca0-hYv-Kzm0EKo9AaMwU3BCZcjdc",
+        authDomain: "unipay-b0d26.firebaseapp.com",
+        databaseURL: "https://unipay-b0d26-default-rtdb.firebaseio.com",
+        projectId: "unipay-b0d26",
+        storageBucket: "unipay-b0d26.firebasestorage.app",
+        messagingSenderId: "289798099942",
+        appId: "1:289798099942:web:50f3a077e12cb458b87c27",
+        measurementId: "G-E3C7R73ZET"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentUser;
+
+    onAuthStateChanged(auth, user => {
+        if(user){
+            currentUser = user;
+            checkStatus();
+        } else {
+            window.location.href = "dashboard.html";
+        }
+    });
+
+    // 1. Check Verification Status
+    function checkStatus() {
+        onValue(ref(db, "users/" + currentUser.uid + "/verification"), (snapshot) => {
+            const data = snapshot.val();
+            const badge = document.getElementById("statusBadge");
+            const desc = document.getElementById("statusDesc");
+            const form = document.getElementById("verificationForm");
+            const info = document.getElementById("infoBox");
+
+            if (data && data.status === "Pending") {
+                badge.className = "badge pending";
+                badge.innerText = "Pending";
+                desc.innerText = "Under Review";
+                form.style.display = "none";
+                info.style.display = "block";
+            } 
+            else if (data && data.status === "Verified") {
+                badge.className = "badge verified";
+                badge.innerText = "Verified";
+                desc.innerText = "Identity Confirmed";
+                form.style.display = "none";
+                info.style.display = "block";
+                info.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#27ae60"></i><h3>Account Verified</h3><p>Your account is fully verified. You can now access all features.</p><button class="submit-btn" style="margin-top:20px; width:auto;" onclick="window.location.href='dashboard.html'">Go to Dashboard</button>`;
+            } 
+            else {
+                // Not verified yet
+                badge.className = "badge unverified";
+                badge.innerText = "Unverified";
+                desc.innerText = "Action Required";
+                form.style.display = "block";
+                info.style.display = "none";
+            }
+        });
+    }
+
+    // 2. Image Preview Function (Attached to Window)
+    window.previewImage = function(input, imgId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById(imgId);
+                img.src = e.target.result;
+                img.style.display = "block";
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // 3. Submit Logic
+    window.submitVerification = async function() {
+        const docType = document.getElementById("docType").value;
+        const docNumber = document.getElementById("docNumber").value;
+        const frontFile = document.getElementById("frontFile").files[0];
+        const backFile = document.getElementById("backFile").files[0];
+
+        if (!docNumber || !frontFile || !backFile) {
+            return alert("Please fill details and upload both photos.");
+        }
+
+        const btn = document.getElementById("submitBtn");
+        btn.innerText = "Uploading...";
+        btn.disabled = true;
+
+        // Convert images to Base64 strings to save in Realtime DB (Simple method)
+        // Note: For production, use Firebase Storage. This is for the demo to work easily.
+        try {
+            const frontBase64 = await toBase64(frontFile);
+            const backBase64 = await toBase64(backFile);
+
+            const verifyData = {
+                status: "Pending",
+                docType: docType,
+                docNumber: docNumber,
+                frontImage: frontBase64,
+                backImage: backBase64,
+                timestamp: new Date().toLocaleString()
+            };
+
+            await set(ref(db, "users/" + currentUser.uid + "/verification"), verifyData);
+            
+            // UI will update automatically due to checkStatus() listener
+            alert("Documents Submitted Successfully!");
+
+        } catch (error) {
+            alert("Error uploading: " + error.message);
+            btn.innerText = "Submit Documents";
+            btn.disabled = false;
+        }
+    }
+
+    // Helper: File to Base64
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+</script>
+
+</body>
+</html>

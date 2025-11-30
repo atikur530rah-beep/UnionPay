@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UniPay – Login & Register</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #4322ff, #7b3cff, #9e4bff);
+        overflow: hidden;
+    }
+
+    .container {
+        width: 380px;
+        background: rgba(255, 255, 255, 0.12);
+        padding: 35px;
+        border-radius: 18px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        backdrop-filter: blur(12px);
+        color: white;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+
+    .input-field {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    /* Style to hide elements initially */
+    .hidden {
+        display: none;
+    }
+
+    .input-field input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+        font-size: 15px;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        box-sizing: border-box; 
+    }
+
+    .input-field input::placeholder {
+        color: #e8e8e8;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background: #fff;
+        color: #4322ff;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        background: #e6e6e6;
+    }
+
+    .toggle-text {
+        text-align: center;
+        margin-top: 18px;
+        font-size: 14px;
+    }
+
+    .toggle-text span {
+        color: #fff;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: underline;
+    }
+
+    .logo {
+        text-align: center;
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        letter-spacing: 1.5px;
+    }
+
+    #alert {
+        margin-bottom: 15px; 
+        text-align: center;
+        font-size: 14px;
+        min-height: 20px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="logo">UniPay</div>
+    <h2 id="title">Login</h2>
+
+    <div id="alert"></div>
+
+    <div class="input-field">
+        <input type="email" id="email" placeholder="Enter Email" />
+    </div>
+
+    <div class="input-field">
+        <input type="password" id="password" placeholder="Enter Password" />
+    </div>
+
+    <!-- Invitation Code Field (Hidden by default) -->
+    <div class="input-field hidden" id="inviteField">
+        <input type="text" id="invitationCode" placeholder="Invitation Code" />
+    </div>
+
+    <button id="authBtn" onclick="login()">Login</button>
+
+    <div class="toggle-text">
+        <span id="toggle" onclick="switchMode()">Create an account?</span>
+    </div>
+</div>
+
+<!-- Firebase Scripts -->
+<script type="module">
+    // Firebase Import
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } 
+    from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+    // Your Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyD2jgca0-hYv-Kzm0EKo9AaMwU3BCZcjdc",
+        authDomain: "unipay-b0d26.firebaseapp.com",
+        databaseURL: "https://unipay-b0d26-default-rtdb.firebaseio.com",
+        projectId: "unipay-b0d26",
+        storageBucket: "unipay-b0d26.firebasestorage.app",
+        messagingSenderId: "289798099942",
+        appId: "1:289798099942:web:50f3a077e12cb458b87c27",
+        measurementId: "G-E3C7R73ZET"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let isLogin = true;
+
+    window.switchMode = function() {
+        isLogin = !isLogin;
+        
+        // UI Updates
+        document.getElementById("title").innerText = isLogin ? "Login" : "Register";
+        document.getElementById("authBtn").innerText = isLogin ? "Login" : "Register";
+        document.getElementById("toggle").innerText = isLogin ? "Create an account?" : "Already have an account?";
+        document.getElementById("alert").innerHTML = ""; // Clear errors
+        
+        // Toggle Invitation Code Visibility
+        const inviteField = document.getElementById("inviteField");
+        if (isLogin) {
+            inviteField.classList.add("hidden");
+        } else {
+            inviteField.classList.remove("hidden");
+        }
+    }
+
+    window.login = function() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const inviteCode = document.getElementById("invitationCode").value.trim();
+        const alertBox = document.getElementById("alert");
+
+        alertBox.style.color = "#fff";
+        alertBox.innerHTML = "Processing...";
+
+        if (isLogin) {
+            // LOGIN LOGIC
+            signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                const uid = userCredential.user.uid;
+
+                // CHECK IF BANNED BEFORE ALLOWING LOGIN
+                get(ref(db, "users/" + uid)).then((snapshot) => {
+                    const data = snapshot.val();
+                    
+                    if (data && data.banned === true) {
+                        // User is banned
+                        alertBox.style.color = "#ff6b6b";
+                        alertBox.innerHTML = "This account has been suspended ";
+                        signOut(auth); // Log them out immediately
+                    } else {
+                        // User is valid
+                        alertBox.style.color = "lightgreen";
+                        alertBox.innerHTML = "Successfully Logged In!";
+                        setTimeout(() => { window.location.href = "Dashboard.html"; }, 1200);
+                    }
+                });
+            })
+            .catch((error) => {
+                alertBox.style.color = "#ff6b6b";
+                alertBox.innerHTML = "Login Failed: " + error.message;
+            });
+        } 
+        else {
+            // REGISTER LOGIC
+            
+            // 1. Check Invitation Code
+            if (inviteCode !== "UniPay01") {
+                alertBox.style.color = "#ff6b6b";
+                alertBox.innerHTML = "Invalid Invitation Code!";
+                return; // Stop execution
+            }
+
+            // 2. Create Firebase Account
+            createUserWithEmailAndPassword(auth, email, password)
+            .then(() => {
+                alertBox.style.color = "lightgreen";
+                alertBox.innerHTML = "Account Created Successfully!";
+                // Clear inputs
+                document.getElementById("email").value = "";
+                document.getElementById("password").value = "";
+                document.getElementById("invitationCode").value = "";
+                setTimeout(() => switchMode(), 1200);
+            })
+            .catch((error) => {
+                alertBox.style.color = "#ff6b6b";
+                alertBox.innerHTML = error.message;
+            });
+        }
+    }
+</script>
+
+</body>
+</html>

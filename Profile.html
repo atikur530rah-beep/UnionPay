@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniPay - Profile</title>
+
+<!-- Google Fonts & Font Awesome -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        background: #f5f6fa;
+        overflow-x: hidden;
+    }
+
+    /* --- Top Bar (Consistent with Dashboard) --- */
+    .topbar {
+        width: 100%;
+        padding: 15px 25px;
+        background: linear-gradient(135deg,#4322ff,#944bff);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+    }
+
+    .back-btn { font-size: 22px; cursor: pointer; color: white; text-decoration: none; }
+    .title { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+    .top-right { width: 24px; } /* Spacer to center title */
+
+    /* --- Main Content --- */
+    .main-content {
+        padding-top: 90px;
+        padding-bottom: 50px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .profile-container {
+        width: 100%;
+        max-width: 500px;
+        background: white;
+        margin: 0 20px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        padding: 30px;
+        animation: fadeIn 0.5s ease;
+    }
+
+    /* Profile Image Area */
+    .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .img-circle {
+        width: 100px;
+        height: 100px;
+        background: #eee;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        color: #4322ff;
+        margin-bottom: 10px;
+        border: 3px solid #f0f0f0;
+    }
+    .profile-header h2 { margin: 0; color: #333; font-size: 20px; }
+    .profile-header p { margin: 5px 0 0; color: #777; font-size: 14px; }
+
+    /* Form Fields */
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    .form-group input, 
+    .form-group textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #f0f0f0;
+        border-radius: 12px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 15px;
+        color: #333;
+        transition: 0.3s;
+        box-sizing: border-box;
+        outline: none;
+        background: #fafafa;
+    }
+    .form-group input:focus, 
+    .form-group textarea:focus {
+        border-color: #4322ff;
+        background: white;
+    }
+    .form-group textarea {
+        resize: none;
+        height: 80px;
+    }
+
+    /* Save Button */
+    .save-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg,#4322ff,#944bff);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 5px 15px rgba(67, 34, 255, 0.25);
+        margin-top: 10px;
+    }
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(67, 34, 255, 0.35);
+    }
+    .save-btn:active { transform: scale(0.98); }
+
+    /* Success Message */
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #27ae60;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-size: 14px;
+        opacity: 0;
+        transition: 0.5s;
+        pointer-events: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .toast.show { opacity: 1; bottom: 40px; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+    <!-- Links back to the dashboard file -->
+    <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="title">Edit Profile</div>
+    <div class="top-right"></div>
+</div>
+
+<div class="main-content">
+    <div class="profile-container">
+        
+        <div class="profile-header">
+            <div class="img-circle"><i class="fa-solid fa-user"></i></div>
+            <h2 id="displayHeaderName">User</h2>
+            <p>Personal Information</p>
+        </div>
+
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="fullName" placeholder="Ex: John Doe">
+        </div>
+
+        <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" id="dob">
+        </div>
+
+        <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="phone" placeholder="+1 234 567 890">
+        </div>
+
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="email@example.com">
+        </div>
+
+        <div class="form-group">
+            <label>Address</label>
+            <textarea id="address" placeholder="Enter full address..."></textarea>
+        </div>
+
+        <button class="save-btn" id="saveBtn">Save Details</button>
+
+    </div>
+</div>
+
+<div id="toast" class="toast"><i class="fa-solid fa-check-circle"></i> Profile Saved Successfully!</div>
+
+<!-- Firebase Logic -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD2jgca0-hYv-Kzm0EKo9AaMwU3BCZcjdc",
+        authDomain: "unipay-b0d26.firebaseapp.com",
+        databaseURL: "https://unipay-b0d26-default-rtdb.firebaseio.com",
+        projectId: "unipay-b0d26",
+        storageBucket: "unipay-b0d26.firebasestorage.app",
+        messagingSenderId: "289798099942",
+        appId: "1:289798099942:web:50f3a077e12cb458b87c27",
+        measurementId: "G-E3C7R73ZET"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentUser;
+
+    // Check Auth State
+    onAuthStateChanged(auth, user => {
+        if(user){
+            currentUser = user;
+            loadProfileData();
+        } else {
+            // If not logged in, redirect to dashboard (which handles login) or show alert
+            alert("Please log in first via the Dashboard.");
+            window.location.href = "dashboard.html"; 
+        }
+    });
+
+    // 1. Load Data from Firebase
+    function loadProfileData() {
+        const userRef = ref(db, "users/" + currentUser.uid + "/profile");
+        const saveBtn = document.getElementById("saveBtn");
+
+        saveBtn.innerText = "Loading..."; // Indicate loading
+        
+        onValue(userRef, (snapshot) => {
+            const data = snapshot.val();
+            saveBtn.innerText = "Save Details"; // Reset button text
+
+            if (data) {
+                document.getElementById("fullName").value = data.fullName || "";
+                document.getElementById("dob").value = data.dob || "";
+                document.getElementById("phone").value = data.phone || "";
+                document.getElementById("email").value = data.email || "";
+                document.getElementById("address").value = data.address || "";
+                
+                // Update header name
+                document.getElementById("displayHeaderName").innerText = data.fullName || "User";
+            }
+        });
+    }
+
+    // 2. Save Data to Firebase
+    document.getElementById("saveBtn").addEventListener("click", () => {
+        if(!currentUser) return;
+
+        const profileData = {
+            fullName: document.getElementById("fullName").value,
+            dob: document.getElementById("dob").value,
+            phone: document.getElementById("phone").value,
+            email: document.getElementById("email").value,
+            address: document.getElementById("address").value
+        };
+
+        const btn = document.getElementById("saveBtn");
+        btn.innerText = "Saving...";
+
+        update(ref(db, "users/" + currentUser.uid + "/profile"), profileData)
+        .then(() => {
+            btn.innerText = "Save Details";
+            showToast();
+        })
+        .catch((error) => {
+            btn.innerText = "Save Details";
+            alert("Error saving: " + error.message);
+        });
+    });
+
+    // UI Helper: Show Success Message
+    function showToast() {
+        const toast = document.getElementById("toast");
+        toast.classList.add("show");
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>
